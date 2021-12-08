@@ -1,0 +1,84 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `add_Or_Update_books`(
+_Book_name varchar(20),
+_ISBN INT,
+_Author_name varchar(20),
+_Publish_Date DATE,
+_Edition INT,
+_Price float,
+_Category varchar(20),
+_Num_of_Copies_available int,
+id int
+)
+BEGIN
+if id!=0
+then 
+    update book set Book_name=_Book_name,ISBN=_ISBN,Publish_Date=_Publish_Date,Edition=_Edition,Price=_Price,Category=_Category,Num_of_Copies_available=_Num_of_Copies_available
+    where Book_id=id;
+else
+    insert into book(Book_name,ISBN,Author_name,Publish_Date,Edition,Price,Category,Num_of_Copies_available)
+    values(_Book_name,_ISBN,_Author_name,_Publish_Date,_Edition,_Price,_Category,_Num_of_Copies_available);
+end if;
+END
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `add_Or_update_issue`(
+bi int,
+mi int,
+bd date,
+rd date,
+sb varchar(20),
+rrd date,
+fine int,
+id int
+)
+BEGIN
+if id!=0
+then 
+    update issued set Book_id=bi,member_id=mi,borrow_date=bd,returning_date=rd,status_book=sb,returned_date=rrd,fine=fine
+    where issued_id=id;
+     -- increase the number of copies available  in books table
+     update Book set Num_of_Copies_available= Num_of_Copies_available+1 where Book_id =bi;
+     
+     -- decrease the number of taken by memeber 
+     update Member set Num_of_Books_taken= Num_of_Books_taken-1 where member_id =mi;
+     
+     -- increase the allowed the number of taken in member table
+     update Member set Allowed_Num_of_Books= Allowed_Num_of_Books+1 where member_id =mi;
+else
+    insert into  issued(Book_id,member_id,borrow_date,returning_date,status_book)
+    values(bi,mi,bd,rd,sb);
+    -- reduce the number of copies available
+	update Book set Num_of_Copies_available= Num_of_Copies_available-1 where Book_id =bi;
+    -- Increase the number of books taken by a perticular member
+    update Member set Num_of_Books_taken= Num_of_Books_taken+1 where member_Id =mi;
+    -- reduce the number books taken by user
+    update Member set Allowed_Num_of_Books= Allowed_Num_of_Books-1 where member_Id =mi;
+    
+
+end if;
+
+END
+
+
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `add_Or_Update_Member`(
+fn varchar(20),
+ln varchar(20),
+cn int,
+ma varchar(20),
+email varchar(20),
+Allowed_b int,
+taken_b int,
+enrolled_d date,
+id int
+)
+BEGIN
+ 
+if id!=0
+then 
+    update member set First_name=fn,Last_Name=ln,Contact_number=cn,Member_address=ma,Email=email,Allowed_Num_of_Books=Allowed_b,Num_of_Books_taken=taken_b,enrolled_date=enrolled_d
+    where member_Id=id;
+else
+    insert into member(First_name,Last_Name,Contact_number,Member_address,Email,Allowed_Num_of_Books,Num_of_Books_taken,enrolled_date)
+    values(fn,ln,cn,ma,email,Allowed_b,taken_b,enrolled_d);
+end if;
+END
